@@ -7,10 +7,14 @@ Yet another simple polyfill for ES6 Promise.
 
 ## Usage 
 
-Totally **2** instance methods and **4** class methods, Just like es6 promise, no more, no less.
+Total **6** methods, Just like ES6 promise, no more, no less.
+
+Instance Method:
 
 * Promise#then
 * Promise#catch
+
+Class Method:
 
 * Promise.isPromise
 * Promise.all
