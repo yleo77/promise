@@ -1,8 +1,4 @@
-// bind
-
-// isArray
-
-// forEach
+/* jshint -W084 */
 
 (function() {
 
@@ -22,12 +18,14 @@
     return target;
   };
 
+  var guid = 0;
+
   var resolve = function(val) {
-    if (this._status !== Promise.PENDING) {
+    if (this._status !== STATUS.PENDING) {
       return;
     }
     this._value = val;
-    this._status = Promise.FULFILLED;
+    this._status = STATUS.FULFILLED;
     var fn;
     while (fn = this._listener.shift()) {
       fn(this._value);
@@ -35,21 +33,28 @@
   };
 
   var reject = function(val) {
-    if (this._status !== Promise.PENDING) {
+    if (this._status !== STATUS.PENDING) {
       return;
     }
     this._value = val;
-    this._status = Promise.REJECTED;
+    this._status = STATUS.REJECTED;
     var fn;
     while (fn = this._listener.shift()) {
       fn(this._value);
     }
   };
 
+  var STATUS = {
+    PENDING: 'pending',
+    FULFILLED: 'resolved',
+    REJECTED: 'rejected'
+  };
+
   var Promise = function(fn) {
-    this._status = Promise.PENDING;
+    this._status = STATUS.PENDING;
     this._value = undefined;
     this._listener = [];
+    this._id = guid++;
 
     if (typeof fn === 'function') {
       fn(resolve.bind(this), reject.bind(this));
@@ -58,37 +63,38 @@
 
   extend(Promise.prototype, {
     then: function(onFulfilled, onRejected) {
-
       var promise = new Promise();
+
       var fn = (function(data) {
         var ret = null;
-        if (this._status === Promise.FULFILLED) {
-          ret = onFulfilled ? onFulfilled(data) : data
+        if (this._status === STATUS.FULFILLED) {
+          ret = onFulfilled ? onFulfilled(data) : data;
         } else {
-          ret = onRejected ? onRejected(data) : data
+          ret = onRejected ? onRejected(data) : data;
         }
 
         if (Promise.isPromise(ret)) {
-          ret.then(function() {
+          ret.then(function(data) {
             resolve.call(promise, data);
-          }, function() {
+          }, function(data) {
             reject.call(promise, data);
-          })
+          });
         } else {
-          if (this._status === Promise.FULFILLED) {
+          if (this._status === STATUS.FULFILLED) {
             resolve.call(promise, data);
           } else {
             reject.call(promise, data);
           }
         }
+
+        return ret;
       }).bind(this);
 
-      if (this._status !== Promise.PENDING) {
+      if (this._status !== STATUS.PENDING) {
         fn(this._value);
       } else {
         this._listener.push(fn);
       }
-
       return promise;
     },
     catch: function(onRejected) {
@@ -98,30 +104,26 @@
 
   extend(Promise, {
 
-    PENDING: 'pending',
-    FULFILLED: 'resolved',
-    REJECTED: 'rejected',
-
     isPromise: function(obj) {
       return obj && typeof obj.then === 'function';
     },
 
     // TODO: 转换
     all: function(promises) {
-      if(!Array.isArray(promises)) {
-        throw new Error((promises || 'undefined').toString() + ' ISNOT a Array' );
+      if (!Array.isArray(promises)) {
+        throw new Error((promises || 'undefined').toString() + ' ISNOT a Array');
       }
       var lens = promises.length;
       var values = [];
-      return new Promise(function(resolve, reject){
+      return new Promise(function(resolve, reject) {
         promises.forEach(function(promise, index) {
-          promise.then(function(value){
+          promise.then(function(value) {
             values[index] = value;
             lens = lens - 1;
-            if(lens === 0) {
+            if (lens === 0) {
               resolve(values);
             }
-          }, function(err){
+          }, function(err) {
             reject(err);
           });
         });
@@ -129,16 +131,16 @@
     },
 
     race: function(promises) {
-      if(!Array.isArray(promises)) {
-        throw new Error((promises || 'undefined').toString() + ' ISNOT a Array' );
+      if (!Array.isArray(promises)) {
+        throw new Error((promises || 'undefined').toString() + ' ISNOT a Array');
       }
-      return new Promise(function(resolve, reject){
+      return new Promise(function(resolve, reject) {
         promises.forEach(function(promise, index) {
-          promise.then(function(value){
+          promise.then(function(value) {
             resolve(value);
-          }, function(err){
+          }, function(err) {
             reject(err);
-          })
+          });
         });
       });
     },
@@ -164,7 +166,15 @@
         reject(reason || undefined);
       });
     }
-  })
+  });
+
+  if (typeof define === 'function' && (define.amd || define.cmd)) {
+    define(function(require, exports, module) {
+      exports.Promise = Promise;
+    });
+  } else if (typeof module === 'object' && module.exports) {
+    exports.Promise = Promise;
+  }
 
   this.Promise = Promise;
 })();
