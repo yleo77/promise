@@ -148,6 +148,7 @@
     resolve: function(value) {
 
       if (Promise.isPromise(value)) {
+        resolve.call(value);
         return value;
       }
 
