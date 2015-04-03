@@ -1,5 +1,8 @@
 # promise
 
+[![Build Status](https://travis-ci.org/yleo77/promise.svg?branch=master)](https://travis-ci.org/yleo77/promise)
+
+
 Yet another simple polyfill for ES6 Promise.
 
 ## Usage 
