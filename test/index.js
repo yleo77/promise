@@ -69,8 +69,12 @@ describe('Test: Class Method', function() {
         }));
       });
 
+      var not_promise = 3;
+      promises.push(not_promise);
+      temp.push(not_promise);
+
       Promise.all(promises).then(function(data) {
-        data.should.be.a('array').with.length(3);
+        data.should.be.a('array').with.length(temp.length);
         data.forEach(function(val, index) {
           val.should.equal(temp[index]);
         });

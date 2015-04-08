@@ -108,7 +108,6 @@
       return obj && typeof obj.then === 'function';
     },
 
-    // TODO: 转换
     all: function(promises) {
       if (!Array.isArray(promises)) {
         throw new Error((promises || 'undefined').toString() + ' ISNOT a Array');
@@ -117,6 +116,10 @@
       var values = [];
       return new Promise(function(resolve, reject) {
         promises.forEach(function(promise, index) {
+
+          if (!Promise.isPromise(promise)) {
+            promise = Promise.resolve(promise);
+          }
           promise.then(function(value) {
             values[index] = value;
             lens = lens - 1;
